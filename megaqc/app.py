@@ -66,6 +66,7 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     ma.init_app(app)
     json_api.init_app(app)
+    json_api.permission_manager(rest_api.utils.permission_manager)
     migrate.init_app(app, db)
 
     @app.context_processor

@@ -30,6 +30,18 @@ class Permission(IntEnum):
     ADMIN = auto()
 
 
+def permission_manager(view, view_args, view_kwargs, *args, **kwargs):
+    if not request.headers.has_key("access_token"):
+        abort(401)
+    else:
+        user = User.query.filter_by(
+            api_token=request.headers.get("access_token")
+        ).first()
+        if not user:
+            abort(401)
+        kwargs["user"] = user
+
+
 def check_perms(function):
     """
     Adds a "user" and "permission" kwarg to the view function.
