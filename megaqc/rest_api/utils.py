@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from flask import request
 from flask.globals import current_app
+from flapison.exceptions import AccessDenied, JsonApiException
 from megaqc.user.models import User
 
 
@@ -32,13 +33,18 @@ class Permission(IntEnum):
 
 def permission_manager(view, view_args, view_kwargs, *args, **kwargs):
     if not request.headers.has_key("access_token"):
-        abort(401)
+        raise JsonApiException(
+            "Missing token", title="Not authorized", status=401, code=401
+        )
     else:
         user = User.query.filter_by(
             api_token=request.headers.get("access_token")
         ).first()
         if not user:
-            abort(401)
+            current_app.logger.warn(
+                f"Invalid token used: {request.headers['access_token']} - {request.method} {request.url}"
+            )
+            raise AccessDenied("invalid token")
         kwargs["user"] = user
 
 

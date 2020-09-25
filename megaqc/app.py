@@ -109,7 +109,8 @@ def register_errorhandlers(app):
         # If a HTTPException, pull the `code` attribute; default to 500
         error_code = getattr(error, "code", 500)
         err_msg = str(error)
-        app.logger.error(err_msg)
+        if error_code >= 500:
+            app.logger.error(err_msg)
         # Return JSON if an API call
         if request.path.startswith("/api/") or request.path.startswith("/rest_api/"):
             response = jsonify(
