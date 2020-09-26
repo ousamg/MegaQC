@@ -76,21 +76,21 @@ export default function EditFilter(props) {
 
   // Fetch the filter groups
   useEffect(() => {
-    qcApi.find("filter_groups").then(groups => {
+    qcApi.find("filter_groups", { "page[size]": 0 }).then(groups => {
       setFilterGroups(groups.map(group => group._getUid()));
     });
   }, []);
 
   // Fetch the sample fields
   useEffect(() => {
-    qcApi.find("data_types").then(groups => {
+    qcApi.find("data_types", { "page[size]": 0 }).then(groups => {
       setSampleFields(groups.map(group => group.toJSON()));
     });
   }, []);
 
   // Fetch the report metadata fields
   useEffect(() => {
-    qcApi.find("meta_types").then(groups => {
+    qcApi.find("meta_types", { "page[size]": 0 }).then(groups => {
       setReportFields(groups.map(group => group._getUid()));
     });
   }, []);
