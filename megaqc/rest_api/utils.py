@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from flask import request
 from flask.globals import current_app
+from flask_login import current_user
 from flapison.exceptions import AccessDenied, JsonApiException
 from megaqc.user.models import User
 
@@ -32,50 +33,50 @@ class Permission(IntEnum):
 
 
 def permission_manager(view, view_args, view_kwargs, *args, **kwargs):
-    if not request.headers.has_key("access_token"):
-        raise JsonApiException(
-            "Missing token", title="Not authorized", status=401, code=401
-        )
-    else:
-        user = User.query.filter_by(
-            api_token=request.headers.get("access_token")
-        ).first()
-        if not user:
-            current_app.logger.warn(
+    """
+    Authenticates a user via flask.current_user for web sessions or request.header
+    access_token for direct API calls (and with that precedence). Adds the kwargs
+    "user", "permission" and "auth_method" to the view function.
+
+    :param callable view: the view
+    :param list view_args: view args
+    :param dict view_kwargs: view kwargs
+    :param list args: decorator args
+    :param dict kwargs: decorator kwargs
+    """
+
+    user = None
+    auth_method = None
+    if not current_user.is_anonymous:
+        user = User.query.filter_by(user_id=current_user.user_id).first()
+        auth_method = "current_user"
+    elif request.headers.get("access_token") is not None:
+        user = User.query.filter_by(api_token=request.headers["access_token"]).first()
+        auth_method = "access_token"
+
+    if user is None:
+        if auth_method is None:
+            raise JsonApiException(
+                "missing token", title="Not authorized", status=401, code=401
+            )
+        elif auth_method == "access_token":
+            current_app.logger.debug(
                 f"Invalid token used: {request.headers['access_token']} - {request.method} {request.url}"
             )
             raise AccessDenied("invalid token")
-        kwargs["user"] = user
-
-
-def check_perms(function):
-    """
-    Adds a "user" and "permission" kwarg to the view function.
-
-    :param function:
-    :return:
-    """
-
-    @wraps(function)
-    def user_wrap_function(*args, **kwargs):
-        if not request.headers.has_key("access_token"):
-            perms = Permission.VIEWER
-            user = None
         else:
-            user = User.query.filter_by(
-                api_token=request.headers.get("access_token")
-            ).first()
-            if not user:
-                perms = Permission.VIEWER
-            elif user.is_anonymous:
-                perms = Permission.VIEWER
-            elif user.is_admin:
-                perms = Permission.ADMIN
-            else:
-                perms = Permission.USER
+            current_app.logger.warn(
+                f"Failed to find current_user {current_user.user_id}, "
+                f"something really weird happened - {request.method} {request.url}"
+            )
+            raise AccessDenied("User Not Found", status=404, code=404)
 
-        kwargs["user"] = user
-        kwargs["permission"] = perms
-        return function(*args, **kwargs)
-
-    return user_wrap_function
+    current_app.logger.debug(
+        f"authing user {user.username} via {auth_method} - {request.method} {request.url}"
+    )
+    view_kwargs["user"] = user
+    view_kwargs["auth_method"] = auth_method
+    if user.is_admin:
+        view_kwargs["permission"] = Permission.ADMIN
+    else:
+        view_kwargs["permission"] = Permission.USER
