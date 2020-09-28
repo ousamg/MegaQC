@@ -9,7 +9,6 @@ from http import HTTPStatus
 import megaqc.user.models as user_models
 from flapison import ResourceDetail, ResourceList, ResourceRelationship
 from flask import Blueprint, jsonify, make_response, request
-from flask_login import current_user
 from marshmallow.utils import EXCLUDE, INCLUDE
 from marshmallow_jsonapi.exceptions import IncorrectTypeError
 from megaqc.api.views import check_user
@@ -195,25 +194,12 @@ class CurrentUser(ResourceDetail):
     schema = schemas.UserSchema
     data_layer = dict(session=db.session, model=user_models.User)
 
-    @utils.check_perms
     def get(self, **kwargs):
         """
         Get details about the current user.
 
-        This is also how the frontend can get an access token. For that
-        reason, this endpoint is authenticated using the session, NOT
-        the access token
+        This is also how the frontend can get an access token.
         """
-
-        # Fail if we aren't logged in
-        if current_user.is_anonymous:
-            return "", HTTPStatus.UNAUTHORIZED
-
-        user = (
-            db.session.query(user_models.User)
-            .filter(user_models.User.user_id == current_user.user_id)
-            .first_or_404()
-        )
 
         if kwargs["permission"] >= utils.Permission.ADMIN:
             # If an admin is making this request, give them everything
@@ -222,7 +208,7 @@ class CurrentUser(ResourceDetail):
             # If it's a user requesting their own data, exclude password info
             schema_kwargs = {"exclude": ["salt", "password"]}
 
-        return schemas.UserSchema(many=False, **schema_kwargs).dump(user)
+        return schemas.UserSchema(many=False, **schema_kwargs).dump(kwargs["user"])
 
 
 class FilterList(ResourceList):
