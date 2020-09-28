@@ -35,12 +35,13 @@ class UploadList(ResourceList):
 
     def get_schema_kwargs(self, args, kwargs):
         # Only show the filepath if they're an admin
-        if "user" in kwargs and kwargs["permission"] <= utils.Permission.ADMIN:
+        (user, auth_method, permission) = utils.get_request_user()
+        if user and permission < utils.Permission.ADMIN:
             return {"exclude": ["path"]}
 
         return {}
 
-    @check_user
+    @json_api.has_permission(save=["user"])
     def post(self, **kwargs):
         """
         Upload a new report.
@@ -176,8 +177,9 @@ class UserList(ResourceList):
 
     def get_schema_kwargs(self, args, kwargs):
         # Only show the filepath if they're an admin
-        if "user" in kwargs and kwargs["permission"] <= utils.Permission.ADMIN:
-            return {"exclude": ["reports", "salt", "api_token"]}
+        (user, auth_method, permission) = utils.get_request_user()
+        if user and permission < utils.Permission.ADMIN:
+            return {"exclude": ["reports", "salt", "api_token", "password"]}
 
         return {}
 
@@ -194,6 +196,7 @@ class CurrentUser(ResourceDetail):
     schema = schemas.UserSchema
     data_layer = dict(session=db.session, model=user_models.User)
 
+    @json_api.has_permission(save=["user", "permission"])
     def get(self, **kwargs):
         """
         Get details about the current user.
