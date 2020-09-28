@@ -10,6 +10,26 @@ from flapison.exceptions import AccessDenied, JsonApiException
 from megaqc.user.models import User
 
 
+def get_request_user():
+    user = None
+    auth_method = None
+    if not current_user.is_anonymous:
+        user = User.query.filter_by(user_id=current_user.user_id).first()
+        auth_method = "current_user"
+    elif request.headers.get("access_token") is not None:
+        user = User.query.filter_by(api_token=request.headers["access_token"]).first()
+        auth_method = "access_token"
+
+    if user is None:
+        permission = None
+    elif user.is_admin:
+        permission = Permission.ADMIN
+    else:
+        permission = Permission.USER
+
+    return user, auth_method, permission
+
+
 def get_upload_dir():
     upload_dir = current_app.config["UPLOAD_FOLDER"]
     if not os.path.isdir(upload_dir):
@@ -45,14 +65,7 @@ def permission_manager(view, view_args, view_kwargs, *args, **kwargs):
     :param dict kwargs: decorator kwargs
     """
 
-    user = None
-    auth_method = None
-    if not current_user.is_anonymous:
-        user = User.query.filter_by(user_id=current_user.user_id).first()
-        auth_method = "current_user"
-    elif request.headers.get("access_token") is not None:
-        user = User.query.filter_by(api_token=request.headers["access_token"]).first()
-        auth_method = "access_token"
+    (user, auth_method, permission) = get_request_user()
 
     if user is None:
         if auth_method is None:
@@ -74,9 +87,16 @@ def permission_manager(view, view_args, view_kwargs, *args, **kwargs):
     current_app.logger.debug(
         f"authing user {user.username} via {auth_method} - {request.method} {request.url}"
     )
-    view_kwargs["user"] = user
-    view_kwargs["auth_method"] = auth_method
-    if user.is_admin:
-        view_kwargs["permission"] = Permission.ADMIN
-    else:
-        view_kwargs["permission"] = Permission.USER
+
+    if kwargs.get("save", []):
+        if "user" in kwargs["save"]:
+            view_kwargs["user"] = user
+
+        if "auth_method" in kwargs["save"]:
+            view_kwargs["auth_method"] = auth_method
+
+        if "permission" in kwargs["save"]:
+            if user.is_admin:
+                view_kwargs["permission"] = Permission.ADMIN
+            else:
+                view_kwargs["permission"] = Permission.USER
