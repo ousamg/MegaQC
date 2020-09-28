@@ -66,7 +66,6 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     ma.init_app(app)
     json_api.init_app(app)
-    json_api.permission_manager(rest_api.utils.permission_manager)
     migrate.init_app(app, db)
 
     @app.context_processor
@@ -93,7 +92,6 @@ def register_blueprints(app):
     app.register_blueprint(api.views.api_blueprint)
     # restful.init_app(api.rest_api.api_bp)
     app.register_blueprint(rest_api.views.api_bp)
-    csrf_protect.exempt(rest_api.views.api_bp)
     return None
 
 
@@ -109,10 +107,8 @@ def register_errorhandlers(app):
         # If a HTTPException, pull the `code` attribute; default to 500
         error_code = getattr(error, "code", 500)
         err_msg = str(error)
-        if error_code >= 500:
-            app.logger.error(err_msg)
         # Return JSON if an API call
-        if request.path.startswith("/api/") or request.path.startswith("/rest_api/"):
+        if request.path.startswith("/api/"):
             response = jsonify(
                 {
                     "success": False,
