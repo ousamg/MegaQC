@@ -43,7 +43,7 @@ class Config(object):
     def __init__(self):
         if self.EXTRA_CONFIG:
             with open(self.EXTRA_CONFIG) as f:
-                self.extra_conf = yaml.load(f)
+                self.extra_conf = yaml.load(f, yaml.SafeLoader)
                 for key in self.extra_conf:
                     if key in Config.__dict__:
                         setattr(self, key, self.extra_conf[key])

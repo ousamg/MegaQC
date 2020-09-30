@@ -3,14 +3,14 @@
 User forms.
 """
 import sqlalchemy as sa
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField, PasswordField, StringField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 from .models import User
 
 
-class AdminForm(Form):
+class AdminForm(FlaskForm):
     user_id = HiddenField("id")
     username = StringField(
         "Username", validators=[DataRequired(), Length(min=3, max=25)]
@@ -48,7 +48,7 @@ class AdminForm(Form):
         self.user = None
 
 
-class PasswordChangeForm(Form):
+class PasswordChangeForm(FlaskForm):
     password = PasswordField(
         "Password", validators=[DataRequired(), Length(min=6, max=40)]
     )
@@ -71,7 +71,7 @@ class PasswordChangeForm(Form):
         return super(PasswordChangeForm, self).validate()
 
 
-class RegisterForm(Form):
+class RegisterForm(FlaskForm):
     """
     Register form.
     """

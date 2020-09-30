@@ -2,13 +2,13 @@
 """
 Public forms.
 """
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from megaqc.user.models import User
 from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired
 
 
-class LoginForm(Form):
+class LoginForm(FlaskForm):
     """
     Login form.
     """
