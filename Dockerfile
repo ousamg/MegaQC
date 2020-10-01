@@ -6,7 +6,8 @@ RUN npm install
 RUN npm run build
 
 # Setup the final container that will we run
-FROM tiangolo/meinheld-gunicorn-flask:python3.7
+# FROM tiangolo/meinheld-gunicorn-flask:python3.7
+FROM python:3.7-stretch
 LABEL authors="phil.ewels@scilifelab.se,denis.moreno@scilifelab.se" \
     description="Docker image running MegaQC"
 
