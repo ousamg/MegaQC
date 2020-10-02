@@ -16,7 +16,7 @@ import {
   ModalHeader,
   Row,
   Table,
-  UncontrolledTooltip
+  UncontrolledTooltip,
 } from "reactstrap";
 import BootstrapField from "./bootstrapField";
 import filterSchema from "../util/filterSchema";
@@ -41,13 +41,13 @@ export default function EditFilter(props) {
           type: "samplemeta",
           key: "",
           cmp: "eq",
-          value: [""]
-        }
-      ]
+          value: [""],
+        },
+      ],
     ],
     filterName: "",
     filterGroup: "Global",
-    visibility: "private"
+    visibility: "private",
   };
   const [initialData, setInitialData] = useState(initial);
 
@@ -63,7 +63,7 @@ export default function EditFilter(props) {
           filters: resultJson.data,
           filterName: resultJson.name,
           filterGroup: resultJson.tag,
-          visibility: resultJson.public ? "public" : "private"
+          visibility: resultJson.public ? "public" : "private",
         });
       } else {
         // If we *were* editing a filter but now we're creating a new one, reset the form
@@ -76,22 +76,22 @@ export default function EditFilter(props) {
 
   // Fetch the filter groups
   useEffect(() => {
-    qcApi.find("filter_groups", { "page[size]": 0 }).then(groups => {
-      setFilterGroups(groups.map(group => group._getUid()));
+    qcApi.find("filter_groups", { "page[size]": 0, sort: "id" }).then((groups) => {
+      setFilterGroups(groups.map((group) => group._getUid()));
     });
   }, []);
 
   // Fetch the sample fields
   useEffect(() => {
-    qcApi.find("data_types", { "page[size]": 0 }).then(groups => {
-      setSampleFields(groups.map(group => group.toJSON()));
+    qcApi.find("data_types", { "page[size]": 0, sort: "key" }).then((groups) => {
+      setSampleFields(groups.map((group) => group.toJSON()));
     });
   }, []);
 
   // Fetch the report metadata fields
   useEffect(() => {
-    qcApi.find("meta_types", { "page[size]": 0 }).then(groups => {
-      setReportFields(groups.map(group => group._getUid()));
+    qcApi.find("meta_types", { "page[size]": 0, sort: "key" }).then((groups) => {
+      setReportFields(groups.map((group) => group._getUid()));
     });
   }, []);
 
@@ -138,7 +138,7 @@ export default function EditFilter(props) {
             </ModalHeader>
             <ModalBody>
               <datalist id="filter_tags">
-                {filterGroups.map(group => {
+                {filterGroups.map((group) => {
                   return (
                     <option key={group} value={group}>
                       {group}
@@ -148,15 +148,14 @@ export default function EditFilter(props) {
               </datalist>
 
               <p>
-                Create a new sample filter set. You can use these filter sets
-                when creating plots. Remember to save at the bottom when you're
-                finished!
+                Create a new sample filter set. You can use these filter sets when creating plots.
+                Remember to save at the bottom when you're finished!
               </p>
 
               <Alert color={"light"}>
-                <i className="fa fa-info-circle" aria-hidden="true" /> &nbsp;
-                Filters within a group are applied with <code>AND</code> logic.
-                Different filter groups have <code>OR</code> logic.
+                <i className="fa fa-info-circle" aria-hidden="true" /> &nbsp; Filters within a group
+                are applied with <code>AND</code> logic. Different filter groups have{" "}
+                <code>OR</code> logic.
               </Alert>
               <Row>
                 <Col md={4}>
@@ -168,21 +167,13 @@ export default function EditFilter(props) {
                 <Col md={4}>
                   <FormGroup>
                     <Label>Filter Group</Label>
-                    <Field
-                      component={BootstrapField}
-                      name="filterGroup"
-                      list="filter_tags"
-                    />
+                    <Field component={BootstrapField} name="filterGroup" list="filter_tags" />
                   </FormGroup>
                 </Col>
                 <Col md={4}>
                   <FormGroup>
                     <Label>Visibility</Label>
-                    <Field
-                      type={"select"}
-                      component={BootstrapField}
-                      name="visibility"
-                    >
+                    <Field type={"select"} component={BootstrapField} name="visibility">
                       <option value={"private"}>Just me</option>
                       <option value={"public"}>Everyone</option>
                     </Field>
@@ -191,20 +182,20 @@ export default function EditFilter(props) {
               </Row>
               <FieldArray
                 name="filters"
-                render={outerArrayHelpers => (
+                render={(outerArrayHelpers) => (
                   <>
                     {values.filters.map((filterGroup, i) => {
                       return (
                         <Card
                           style={{
-                            marginBottom: "1em"
+                            marginBottom: "1em",
                           }}
                           key={i}
                         >
                           <CardHeader>Filter Group {i + 1}</CardHeader>
                           <CardBody
                             style={{
-                              padding: 0
+                              padding: 0,
                             }}
                           >
                             <Table responsive={true}>
@@ -214,22 +205,14 @@ export default function EditFilter(props) {
                                   <th>Key</th>
                                   <th>
                                     Comparison{" "}
-                                    <a
-                                      className="float-right"
-                                      href="#"
-                                      id="comparison_tooltip"
-                                    >
-                                      <i
-                                        className="fa fa-info-circle"
-                                        aria-hidden="true"
-                                      />
+                                    <a className="float-right" href="#" id="comparison_tooltip">
+                                      <i className="fa fa-info-circle" aria-hidden="true" />
                                     </a>
                                     <UncontrolledTooltip
                                       placement="right"
                                       target="comparison_tooltip"
                                     >
-                                      <code>matches</code> uses SQL{" "}
-                                      <code>LIKE</code> syntax. Use{" "}
+                                      <code>matches</code> uses SQL <code>LIKE</code> syntax. Use{" "}
                                       <code>%</code> as a wildcard
                                     </UncontrolledTooltip>
                                   </th>
@@ -240,7 +223,7 @@ export default function EditFilter(props) {
                               <tbody>
                                 <FieldArray
                                   name={`filters[${i}]`}
-                                  render={innerArrayHelpers => (
+                                  render={(innerArrayHelpers) => (
                                     <>
                                       {filterGroup.map((filter, j) => (
                                         <tr key={j}>
@@ -249,9 +232,7 @@ export default function EditFilter(props) {
                                             sampleFields={sampleFields}
                                             reportFields={reportFields}
                                             name={`filters[${i}][${j}]`}
-                                            innerArrayHelpers={
-                                              innerArrayHelpers
-                                            }
+                                            innerArrayHelpers={innerArrayHelpers}
                                           />
                                         </tr>
                                       ))}
@@ -263,9 +244,7 @@ export default function EditFilter(props) {
                                         <td>
                                           <Button
                                             onClick={() => {
-                                              innerArrayHelpers.push(
-                                                new Filter()
-                                              );
+                                              innerArrayHelpers.push(new Filter());
                                             }}
                                             size={"sm"}
                                             color={"primary"}
@@ -292,10 +271,7 @@ export default function EditFilter(props) {
                               outline
                               color={"primary"}
                             >
-                              <i
-                                className="fa fa-fw fa-trash"
-                                aria-hidden="true"
-                              />
+                              <i className="fa fa-fw fa-trash" aria-hidden="true" />
                               Delete
                             </Button>
                           </CardFooter>
@@ -310,10 +286,7 @@ export default function EditFilter(props) {
                       outline
                       color={"primary"}
                     >
-                      <i
-                        className="fa fa-fw fa-plus-square"
-                        aria-hidden="true"
-                      />
+                      <i className="fa fa-fw fa-plus-square" aria-hidden="true" />
                       Add new filter group
                     </Button>
                   </>
@@ -326,15 +299,10 @@ export default function EditFilter(props) {
                   <Col
                     md={{
                       size: 6,
-                      offset: 3
+                      offset: 3,
                     }}
                   >
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      color="primary"
-                      block
-                    >
+                    <Button type="submit" disabled={isSubmitting} color="primary" block>
                       Save Filter
                     </Button>
                   </Col>
@@ -356,5 +324,5 @@ EditFilter.propTypes = {
   // The MegaQC JsonApiClient from "@holidayextras/jsonapi-client"
   qcApi: PropTypes.object.isRequired,
   // ID of an existing filter to edit (if any)
-  resourceId: PropTypes.string
+  resourceId: PropTypes.string,
 };
