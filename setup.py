@@ -37,7 +37,6 @@ setup(
         ],
     },
     install_requires=[
-        "argon2-cffi~=16.3",
         "click~=7.0",
         "Flask-APScheduler~=1.7",
         "Flask-Caching~=1.0",
